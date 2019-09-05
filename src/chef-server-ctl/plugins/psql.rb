@@ -61,21 +61,22 @@ add_command_under_category "psql", "Database", "Launches an interactive psql ses
     db_config.merge!(JSON.parse(File.read("/etc/opscode-reporting/opscode-reporting-running.json")))
   end
 
-  seed=known_dbs[service_name]["hashseed"]
-  db_hash_key=known_dbs[service_name]["config_key"]
-  db_name=known_dbs[service_name]["dbname"]
+  seed = known_dbs[service_name]["hashseed"]
+  db_hash_key = known_dbs[service_name]["config_key"]
+  db_name = known_dbs[service_name]["dbname"]
 
   # undocumented, but available. Intended for use primarily for
   # gather-logs to be able to do its thing correctly.
   if (ARGV.include? "--as-admin")
     cfg = running_service_config('postgresql')
-    db_username=cfg['db_connection_superuser'] || cfg['db_superuser']
-    db_password=credentials.get('postgresql', 'db_superuser_password')
+    db_username = cfg['db_connection_superuser'] || cfg['db_superuser']
+    db_password = credentials.get('postgresql', 'db_superuser_password')
   else
     if ARGV.include?(write_arg)
-      db_username=db_config[seed][db_hash_key]['sql_connection_user'] || db_config[seed][db_hash_key]['sql_user']
+      db_username = db_config[seed][db_hash_key]['sql_connection_user'] || db_config[seed][db_hash_key]['sql_user']
     else
-      db_username=db_config[seed][db_hash_key]['sql_ro_user']
+      # do we need a sql_ro_connection_user?
+      db_username = db_config[seed][db_hash_key]['sql_connection_user'] || db_config[seed][db_hash_key]['sql_ro_user']
     end
     # Sorry.
     db_hash_key = "opscode_erchef" if db_hash_key == "opscode-erchef"
