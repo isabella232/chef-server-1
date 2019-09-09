@@ -70,21 +70,27 @@ add_command_under_category "psql", "Database", "Launches an interactive psql ses
   if (ARGV.include? "--as-admin")
     cfg = running_service_config('postgresql')
     db_username = cfg['db_connection_superuser'] || cfg['db_superuser']
-    db_password = credentials.get('postgresql', 'db_superuser_password')
+    db_password_string = 'db_superuser_password'
   else
     if ARGV.include?(write_arg)
       db_username = db_config[seed][db_hash_key]['sql_connection_user'] || db_config[seed][db_hash_key]['sql_user']
+      db_password_string = 'sql_password'
     else
-      # do we need a sql_ro_connection_user?
-      db_username = db_config[seed][db_hash_key]['sql_connection_user'] || db_config[seed][db_hash_key]['sql_ro_user']
+      if db_username = db_config[seed][db_hash_key]['sql_connection_user']
+        db_password_string = 'sql_password'
+      else
+        # do we need an sql_ro_connection_user?
+        db_username, db_password_string = db_config[seed][db_hash_key]['sql_ro_user'], 'sql_ro_password'
+      end
     end
     # Sorry.
+    # should this be moved outside the if-else statement?
     db_hash_key = "opscode_erchef" if db_hash_key == "opscode-erchef"
-    db_password=credentials.get(db_hash_key, "sql_#{'ro_' if ARGV.include?(write_arg)}password")
   end
 
   db_host = db_config[seed]['postgresql']['vip']
   db_port = db_config[seed]['postgresql']['port']
+  db_password = credentials.get(db_hash_key, db_password_string)
 
   if ARGV.include?('--debug') || ARGV.include?('-vv')
     STDOUT.puts "Host: #{db_host}"
